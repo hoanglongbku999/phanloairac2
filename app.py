@@ -2,8 +2,7 @@ from flask import Flask, render_template,request
 import flask
 import pickle
 import numpy as np
-import keras
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 import tensorflow as tf
 import werkzeug
 from flask import jsonify
@@ -13,23 +12,20 @@ label_names = ["Bã rác","Rác hữu cơ","Thực vật","Túi lọc trà","Rá
 
 labels = {'0': 0, '1': 1, '10': 2, '11': 3, '12': 4, '13': 5, '14': 6, '15': 7, '16': 8, '17': 9, '18': 10, '19': 11, '2': 12, '20': 13, '21': 14, '22': 15, '23': 16, '3': 17, '4': 18, '5': 19, '6': 20, '7': 21, '8': 22, '9': 23}
 
-from keras import Model 
-import keras
-ResNet_model = keras.applications.ResNet152V2(weights='imagenet', include_top=False, input_shape=(256, 256, 3))
+
+ResNet_model = tf.keras.applications.ResNet152V2(weights='imagenet', include_top=False, input_shape=(256, 256, 3))
 
 # The last 15 layers fine tune
 for layer in ResNet_model.layers[:-15]:
     layer.trainable = False
 
 x = ResNet_model.output
-x = keras.layers.GlobalAveragePooling2D()(x)
+x = tf.keras.layers.GlobalAveragePooling2D()(x)
 #x = Flatten()(x)
-x = keras.layers.Dense(units=1024, activation='relu')(x)
-x = keras.layers.Dropout(0.5)(x)
-x = keras.layers.Dense(units=512, activation='relu')(x)
-x = keras.layers.Dropout(0.5)(x)
-output  = keras.layers.Dense(units=len(label_names), activation='softmax')(x)
-model = keras.Model(ResNet_model.input, output)
+x = tf.keras.layers.Dense(units=512, activation='relu')(x)
+x = tf.keras.layers.Dropout(0.5)(x)
+output  = tf.keras.layers.Dense(units=len(label_names), activation='softmax')(x)
+model = tf.keras.Model(ResNet_model.input, output)
 model.compile(loss='categorical_crossentropy', optimizer="sgd", metrics=['accuracy'])
 
 global graph
@@ -39,7 +35,7 @@ model.load_weights('model_weight.h5')
 
 
 
-from keras.preprocessing import image
+from tensorflow.keras.preprocessing import image
 def load_image(img_path):
     img = image.load_img(img_path, target_size=(256, 256))
     img_tensor = image.img_to_array(img)                    # (height, width, channels)
